@@ -161,8 +161,19 @@ TARGET_PORT=8043
      Message: unexpected HTTP status code received from server: 401 (Unauthorized); transport: received unexpected content-type "text/plain; charset=utf-8"
    command terminated with exit code 80
    ```
-
    
+4. Call the service **with** parameters
+
+5. > Expect to ge the message: `"Hello Bob have a great day!"`
+
+   ```shell
+   ❯ oc exec -ti client -- grpcurl -d '{"name": "Bob"}' -import-path . -proto /config/helloworld.proto -insecure $TARGET:$TARGET_PORT helloworld.Greeter/SayHello
+   ERROR:
+     Code: Unauthenticated
+     Message: unexpected HTTP status code received from server: 401 (Unauthorized); transport: received unexpected content-type "text/plain; charset=utf-8"
+   command terminated with exit code 80
+   ```
+
 
    **At log folder you have**:
 
