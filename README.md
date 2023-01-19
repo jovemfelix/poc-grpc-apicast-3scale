@@ -162,16 +162,16 @@ TARGET_PORT=8043
    command terminated with exit code 80
    ```
    
-4. Call the service **with** parameters
+4. Call the service **with** parameters and **with** the `user_key=anything`
 
 5. > Expect to ge the message: `"Hello Bob have a great day!"`
 
    ```shell
-   ❯ oc exec -ti client -- grpcurl -d '{"name": "Bob"}' -import-path . -proto /config/helloworld.proto -insecure $TARGET:$TARGET_PORT helloworld.Greeter/SayHello
+   ❯ oc exec -ti client -- grpcurl -H "user_key: test"  -import-path . -proto /config/helloworld.proto -insecure $TARGET:$TARGET_PORT helloworld.Greeter/SayHello
    ERROR:
-     Code: Unauthenticated
-     Message: unexpected HTTP status code received from server: 401 (Unauthorized); transport: received unexpected content-type "text/plain; charset=utf-8"
-   command terminated with exit code 80
+     Code: Unavailable
+     Message: unexpected HTTP status code received from server: 503 (Service Unavailable); transport: received unexpected content-type "text/html"
+   command terminated with exit code 78
    ```
 
 
