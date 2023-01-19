@@ -188,6 +188,6 @@ TARGET_PORT=8043
 > Delete the project created with all configuration
 
 ```shell
-❯ oc delete project grpc-guide-with-3scale
+❯ oc delete project grpc-guide-with-3scale-problem
 ```
 
