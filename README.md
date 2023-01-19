@@ -162,43 +162,13 @@ TARGET_PORT=8043
    command terminated with exit code 80
    ```
 
-4. **Call** the service **without** parameters and **with** the `user_key=anything`
-
-   ```shell
-   ❯ oc exec -ti client -- grpcurl -H "user_key: test" -import-path . -proto /config/helloworld.proto -insecure $TARGET:$TARGET_PORT helloworld.Greeter/SayHello
-   {
-     "message": "Hello  have a great day!"
-   }
-   ```
-
-5. Call the service **with** parameters and **with** the `user_key=anything`
-
-   ```shell
-   ❯ oc exec -ti client -- grpcurl -vv -H "user_key: test" -d '{"name": "Bob"}' -import-path . -proto /config/helloworld.proto -insecure $TARGET:$TARGET_PORT helloworld.Greeter/SayHello
    
-   Resolved method descriptor:
-   // Sends a greeting
-   rpc SayHello ( .helloworld.HelloRequest ) returns ( .helloworld.HelloReply );
-   
-   Request metadata to send:
-   user_key: test
-   
-   Response headers received:
-   (empty)
-   
-   Response trailers received:
-   (empty)
-   Sent 1 request and received 0 responses
-   ERROR:
-     Code: Unavailable
-     Message: unexpected HTTP status code received from server: 503 (Service Unavailable); transport: received unexpected content-type "text/html"
-   command terminated with exit code 78
-   ```
 
    **At log folder you have**:
 
    * [apicast-error_using_route.log](logs/apicast-error_using_route.log)
    * [apicast-sucess_using_service.log](logs/apicast-sucess_using_service.log)
+
 
 
 
