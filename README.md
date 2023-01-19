@@ -65,7 +65,7 @@ Openshift is needed to run this example:
 
 ```shell
 # create a project to deploy this example
-❯ oc new-project grpc-guide-with-3scale
+❯ oc new-project grpc-guide-with-3scale-problem
 
 # deploy the resources on cluster
 ❯ oc kustomize k8s | oc apply -f -
@@ -86,89 +86,43 @@ Openshift is needed to run this example:
 2023-01-19 18:49:21,483 INFO  [io.quarkus] (main) Installed features: [cdi, grpc-server, smallrye-context-propagation, vertx]
 ```
 
+## Change the Service to Route URL
+
+```shell
+# get the ROUTE url
+❯ GRPC_ROUTE=$(oc get route -o jsonpath='{.spec.host}' grpc-route)
+
+❯ grep 'api_backend' k8s/apicast.yaml
+            "api_backend": "https://grpc-service:443",
+
+❯ sed "s|https://grpc-service:443|https://$GRPC_ROUTE|g" k8s/apicast.yaml > k8s/apicast-with_route.yaml
+
+❯ grep 'api_backend' k8s/apicast-with_route.yaml
+            "api_backend": "https://grpc-route-grpc-guide-with-3scale-problem.apps.xxx",
+
+❯ diff k8s/apicast.yaml k8s/apicast-with_route.yaml
+26c26
+<             "api_backend": "https://grpc-service:443",
+---
+>             "api_backend": "https://grpc-route-grpc-guide-with-3scale-problem.apps.xxx",
+```
+
+#### Deploy the APICast using the Route
+
+```shell
+❯ oc apply -f k8s/apicast-with_route.yaml
+configmap/apicast-config created
+deployment.apps/apicast created
+service/apicast-service created
+route.route.openshift.io/apicast-route created
+pod/apicast-api-server created
+service/server-service created
+```
+
 
 
 ## Testing Connectivity
 
-### TARGET=`grpc-service`
-
-```shell
-TARGET=grpc-service
-TARGET_PORT=443
-```
-
-1. **list** grpc services
-
-   ```shell
-   ❯ oc exec -ti client -- grpcurl -import-path . -proto /config/helloworld.proto -insecure $TARGET:$TARGET_PORT list
-   helloworld.Greeter
-   ```
-
-2. **describe** the services listed
-
-   ```shell
-   ❯ oc exec -ti client -- grpcurl -import-path . -proto /config/helloworld.proto -insecure $TARGET:$TARGET_PORT describe helloworld.Greeter
-   helloworld.Greeter is a service:
-   // The greeting service definition.
-   service Greeter {
-     // Sends a greeting
-     rpc SayHello ( .helloworld.HelloRequest ) returns ( .helloworld.HelloReply );
-   }
-   ```
-
-3. **Call** the service **without** parameters
-
-   ```shell
-   ❯ oc exec -ti client -- grpcurl -import-path . -proto /config/helloworld.proto -insecure $TARGET:$TARGET_PORT helloworld.Greeter/SayHello
-   {
-     "message": "Hello  have a great day!"
-   }
-   
-   # it responds the service message coded
-   ❯ grep -r 'have a great day!' .
-   Binary file ./source/grpc-helloworld/target/classes/com/redhat/example/HelloService.class matches
-   ./source/grpc-helloworld/src/main/java/com/redhat/example/HelloService.java:                HelloReply.newBuilder().setMessage("Hello " + request.getName() + " have a great day!").build()
-   ...
-   ```
-
-4. Call the service **with** parameters
-
-   ```shell
-   ❯ oc exec -ti client -- grpcurl -d '{"name": "Bob"}' -import-path . -proto /config/helloworld.proto -insecure $TARGET:$TARGET_PORT helloworld.Greeter/SayHello
-   {
-     "message": "Hello Bob have a great day!"
-   }
-   ```
-
-5. Call the service **with** parameters and with `grpcurl -vv` *to see the flow..*
-
-   ```shell
-   ❯ oc exec -ti client -- grpcurl -vv -d '{"name": "Bob"}' -import-path . -proto /config/helloworld.proto -insecure $TARGET:$TARGET_PORT helloworld.Greeter/SayHello
-   
-   Resolved method descriptor:
-   // Sends a greeting
-   rpc SayHello ( .helloworld.HelloRequest ) returns ( .helloworld.HelloReply );
-   
-   Request metadata to send:
-   (empty)
-   
-   Response headers received:
-   content-type: application/grpc
-   grpc-accept-encoding: gzip
-   
-   Estimated response size: 29 bytes
-   
-   Response contents:
-   {
-     "message": "Hello Bob have a great day!"
-   }
-   
-   Response trailers received:
-   (empty)
-   Sent 1 request and received 1 response
-   ```
-
-   
 ### TARGET=`apicast-service`
 
 ```shell
@@ -220,15 +174,6 @@ TARGET_PORT=8043
 5. Call the service **with** parameters and **with** the `user_key=anything`
 
    ```shell
-   ❯ oc exec -ti client -- grpcurl -H "user_key: test" -d '{"name": "Bob"}' -import-path . -proto /config/helloworld.proto -insecure $TARGET:$TARGET_PORT helloworld.Greeter/SayHello
-   {
-     "message": "Hello Bob have a great day!"
-   }
-   ```
-
-6. Call the service **with** parameters and and **with** the `user_key=anything` and **with** `grpcurl -vv` *to see the flow..*
-
-   ```shell
    ❯ oc exec -ti client -- grpcurl -vv -H "user_key: test" -d '{"name": "Bob"}' -import-path . -proto /config/helloworld.proto -insecure $TARGET:$TARGET_PORT helloworld.Greeter/SayHello
    
    Resolved method descriptor:
@@ -239,22 +184,23 @@ TARGET_PORT=8043
    user_key: test
    
    Response headers received:
-   content-type: application/grpc
-   date: Thu, 19 Jan 2023 19:17:48 GMT
-   grpc-accept-encoding: gzip
-   server: openresty
-   
-   Estimated response size: 29 bytes
-   
-   Response contents:
-   {
-     "message": "Hello Bob have a great day!"
-   }
+   (empty)
    
    Response trailers received:
    (empty)
-   Sent 1 request and received 1 response
+   Sent 1 request and received 0 responses
+   ERROR:
+     Code: Unavailable
+     Message: unexpected HTTP status code received from server: 503 (Service Unavailable); transport: received unexpected content-type "text/html"
+   command terminated with exit code 78
    ```
+
+   **At log folder you have**:
+
+   * [apicast-error_using_route.log](logs/apicast-error_using_route.log)
+   * [apicast-sucess_using_service.log](logs/apicast-sucess_using_service.log)
+
+
 
 # Cleanup
 
