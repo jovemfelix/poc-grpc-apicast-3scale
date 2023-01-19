@@ -167,7 +167,7 @@ TARGET_PORT=8043
 5. > Expect to ge the message: `"Hello Bob have a great day!"`
 
    ```shell
-   ❯ oc exec -ti client -- grpcurl -H "user_key: test"  -import-path . -proto /config/helloworld.proto -insecure $TARGET:$TARGET_PORT helloworld.Greeter/SayHello
+   ❯ oc exec -ti client -- grpcurl -H "user_key: test" -d '{"name": "Bob"}' -import-path . -proto /config/helloworld.proto -insecure $TARGET:$TARGET_PORT helloworld.Greeter/SayHello
    ERROR:
      Code: Unavailable
      Message: unexpected HTTP status code received from server: 503 (Service Unavailable); transport: received unexpected content-type "text/html"
