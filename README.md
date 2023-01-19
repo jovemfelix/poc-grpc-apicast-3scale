@@ -164,7 +164,7 @@ TARGET_PORT=8043
    
 4. Call the service **with** parameters and **with** the `user_key=anything`
 
-5. > Expect to ge the message: `"Hello Bob have a great day!"`
+   > Expect to get the message: `"Hello Bob have a great day!"`
 
    ```shell
    ❯ oc exec -ti client -- grpcurl -H "user_key: test" -d '{"name": "Bob"}' -import-path . -proto /config/helloworld.proto -insecure $TARGET:$TARGET_PORT helloworld.Greeter/SayHello
@@ -173,6 +173,7 @@ TARGET_PORT=8043
      Message: unexpected HTTP status code received from server: 503 (Service Unavailable); transport: received unexpected content-type "text/html"
    command terminated with exit code 78
    ```
+
 
 
    **At log folder you have**:
