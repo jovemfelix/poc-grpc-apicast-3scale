@@ -1,0 +1,250 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  labels:
+    app: grpc-guide
+  name: apicast-config
+data:
+  BACKEND_ENDPOINT_OVERRIDE: http://server-service/
+  APICAST_HTTPS_PORT: "8043"
+  APICAST_LOG_LEVEL: "debug"
+  THREESCALE_CONFIG_FILE: /gateway/test.json
+  test.json: |-
+    {
+      "services": [
+        {
+          "id": 200,
+          "backend_version":  1,
+          "backend_authentication_type": "service_token",
+          "backend_authentication_value": "token-value",
+          "proxy": {
+            "credentials_location": "headers",
+            "hosts": [
+              "apicast-service"
+            ],
+            "api_backend": "https://grpc-service:443",
+            "proxy_rules": [
+              {
+                "pattern": "/",
+                "http_method": "GET",
+                "metric_system_name": "hits",
+                "delta": 1
+              },
+              {
+                "pattern": "/",
+                "http_method": "POST",
+                "metric_system_name": "hits",
+                "delta": 1
+              }
+            ],
+            "policy_chain": [
+              {
+                "name": "apicast.policy.tls",
+                "configuration": {
+                  "certificates": [
+                    {
+                      "certificate_path": "/gateway/apicast-service.crt",
+                      "certificate_key_path": "/gateway/apicast-service.key"
+                    }
+                  ]
+                }
+              },
+              {
+                "name": "apicast.policy.grpc"
+              },
+              {
+                "name": "apicast.policy.apicast"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  
+  # refers to: certs/server.pem
+  apicast-service.crt: |-
+    -----BEGIN CERTIFICATE-----
+    MIIC9zCCAd8CCQCQeQd01F+8hDANBgkqhkiG9w0BAQUFADBCMQswCQYDVQQGEwJV
+    UzETMBEGA1UECAwKc29tZS1zdGF0ZTENMAsGA1UECgwEdGVzdDEPMA0GA1UEAwwG
+    dGVzdGNhMB4XDTIyMTIwNjIwMjIyOFoXDTMyMTIwMzIwMjIyOFowOTE3MDUGA1UE
+    AwwuKi5hcHBzLnNoYXJlZC00MTAub3BlbnNoaWZ0LnJlZGhhdHdvcmtzaG9wcy5p
+    bzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMFdDXUnDvORpkjYopH6
+    1665LA/9Ajcl95WhjZ59uo7WGns/+sQ06lZaq9El9EQaD21px71FV525x8K9hzJC
+    lohPYZdD7+huGMXDI3OShDP4M5hoOmDdd2eI6LzsphhGVm8lRj/sLKS58XwFBgBs
+    X9v+P8/Ij6qTXlYsrgwA7NRqSnx+r2EEmZ0OHlL0P6I20EyWE5+TxMPndUrhBKki
+    1ctvI0zGXPUS7zU87rEo+F389h6bNBDSk/o2npI1jLQvXMfEfxd0ZCaFYIDdRMh1
+    c0DLXbeR+Fehps2EEKo/pD1nV/Zty+XtiAOYDK3CIiRmi98dacpy3oNLei2YvMAF
+    HUECAwEAATANBgkqhkiG9w0BAQUFAAOCAQEAn6NKuCdMmN62ZYi4vLvr2GtKJoHs
+    nYneeH4NM1geYhKXw3eNZqE/JJ4uhiXonwg8bwSO5gAdvdYXiCOSlnH0JLFq8uQV
+    yZV/KaV14IN5NAEtwHSM4iLhKxrBpczJBCKc23xwKe08ZknZNf8MXQaEwzs1wSF2
+    49WEVqxrs6Bw4OqpKX90VP3ChCmWmEjoTEp86y2P2UbZqr4f363KrlMtJ8z+4emo
+    SeMcogSwyB/KimHFjyDpr3y0tqK/2LvfgPaoX2l4gZLDp0TEI9QaPDmd9r6fOigq
+    VJLa3PEv1M+5t4I35uV8GNWDNpJctNf5wRaT6vpsOtUJAYE2F4aOt8Ksrg==
+    -----END CERTIFICATE-----
+
+  # refers to: certs/server.key
+  apicast-service.key: |-
+    -----BEGIN PRIVATE KEY-----
+    MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDBXQ11Jw7zkaZI
+    2KKR+teuuSwP/QI3JfeVoY2efbqO1hp7P/rENOpWWqvRJfREGg9tace9RVeducfC
+    vYcyQpaIT2GXQ+/obhjFwyNzkoQz+DOYaDpg3XdniOi87KYYRlZvJUY/7CykufF8
+    BQYAbF/b/j/PyI+qk15WLK4MAOzUakp8fq9hBJmdDh5S9D+iNtBMlhOfk8TD53VK
+    4QSpItXLbyNMxlz1Eu81PO6xKPhd/PYemzQQ0pP6Np6SNYy0L1zHxH8XdGQmhWCA
+    3UTIdXNAy123kfhXoabNhBCqP6Q9Z1f2bcvl7YgDmAytwiIkZovfHWnKct6DS3ot
+    mLzABR1BAgMBAAECggEBALLsiv5j5QbnOIphw5T3G0s3V5l30ev7+ux/sE7/Inj3
+    j0uK+V1DZbAAeMqwpyW5Q5tH7aarGpb9iOYfgJG2YhrB8ZkKKV3XOp8MoapY4nJA
+    cmXN1G87nzizzEC9bjg6JdL1F9sgjHLlCJps/4+2uMEVtDBt8tqxQPLWpzq+RGeM
+    Udgu/l8uoNlhSStP5SNqGff7DDlnlzJXwi36jR0mIUYwaXLYuRDIzudg8v9Ktdry
+    frNLv4gtjaWtx0WeOwsTiOFt/cSIQitxKM4a/qU21ZGbjllEIG2be5lyHBZ7jg6I
+    OlYGBuFZ/eDU5O7lzx9Qbqj0sIduIxgkiCrNtqLUYZECgYEA9BmRTXhkIIozIArx
+    XrQTjbjKwanvXIYtIfPPTf2yqaY3hRU+fj4EBGyWYBQErYcEkJUOCBsYD81lEt76
+    Ng97m+xXVP8HdmYjX1FFUgXX0zXiRgqM4wJVf4vPVDsiuWjQNAzxSa5mpl+/PQ2B
+    Nkj0ka+kgq9F6ZxoU/mcvZrwvCUCgYEAyspH+eVuZN6vvPxnvC1bWCYB61JzeV4j
+    4Ds5zdaQMK+wmONtMOD4GO+Uy8OwWJPj7azMaM/jKTPMig9/VZuaQHvTBbz/au9Z
+    Wpg480l5wsZP0jNLAiKgyJzRe1MQJkFNuMaAeipAQ7AI/tKKUsq+L9NSPr8ndUhj
+    D7bPpP1gg+0CgYEAkpA/dFqTFA6mv9iSMKDDFNcdtsaIF+/gbYBsupFXkxFgSKIG
+    0dn+o4FnkOy0GlT1YrJ8qFVMT0CuLXSAm7EUMPzpOvmdy3NsTbEIhEVJ32F9KTzw
+    duVR3LFfnV2cbeMHEBmtTuZOcBsRQmE3cha/8jGZ/3Wp7qig47r+Z8H+RZkCgYAG
+    YWLuW+ejSNZirdZdt1eeaGO7EbcMZIfgcDybW1riDUUTKmSvGwTzU+ZsmtWbk9ui
+    CMPNsGzHSRfwaBhrix/JU5wKHC41IR7AmPWBwhgQpsiwJmj/wjMo3LZCmRRy/68A
+    V06HiXjIKGvACMPNYw+k1ZNK4hzNtd9YCTpzSH2W6QKBgEK5T32RO48JPgNBE0/U
+    bo2+sdrtub6BNHdADG02+JXgFIGTJB8/dQrtt6z5Gw59S+dV7bnQS7fE5MlA4uJ7
+    FGFwXiOmvYw/KwEyRCVnDyx1YFYkBw1qaBHIJOoGXsH94BJMQZqzTkwWETFyYE1V
+    75/RLvQ0Uz0jPJwOF0e12QdK
+    -----END PRIVATE KEY-----
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    app: grpc-guide
+  name: apicast
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apicast
+  template:
+    metadata:
+      labels:
+        app: apicast
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: gateway
+          # image: quay.io/3scale/apicast:master
+          image: registry.redhat.io/3scale-amp2/apicast-gateway-rhel8:3scale2.12
+          imagePullPolicy: Always
+          ports:
+            - name: proxy
+              port: 8080
+              protocol: TCP
+              containerPort: 8080
+            - name: proxy-tls
+              port: 8043
+              protocol: TCP
+              containerPort: 8043
+            - name: management
+              port: 8090
+              protocol: TCP
+              containerPort: 8090
+          env:
+            - name: BACKEND_ENDPOINT_OVERRIDE
+              valueFrom:
+                configMapKeyRef:
+                  name: apicast-config
+                  key: BACKEND_ENDPOINT_OVERRIDE
+            - name: THREESCALE_CONFIG_FILE
+              valueFrom:
+                configMapKeyRef:
+                  name: apicast-config
+                  key: THREESCALE_CONFIG_FILE
+            - name: APICAST_HTTPS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: apicast-config
+                  key: APICAST_HTTPS_PORT
+            - name: APICAST_LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: apicast-config
+                  key: APICAST_LOG_LEVEL
+          volumeMounts:
+            - name: config-volume
+              mountPath: /gateway
+      volumes:
+        - name: config-volume
+          configMap:
+            name: apicast-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: grpc-guide
+  name: apicast-service
+spec:
+  selector:
+    app: apicast
+  ports:
+  - port: 8080
+    name: plaintext
+    protocol: TCP
+    targetPort: 8080
+  - port: 8043
+    name: proxy-tls
+    protocol: TCP
+    targetPort: 8043
+
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  labels:
+    app: grpc-guide
+  name: apicast-route
+spec:
+  to:
+    kind: Service
+    name: apicast-service
+    weight: 100
+  port:
+    targetPort: proxy-tls
+  tls:
+    termination: passthrough
+  wildcardPolicy: None
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: grpc-guide
+    deployment: apicast-api-server
+  name: apicast-api-server
+spec:
+  terminationGracePeriodSeconds: 0
+  containers:
+  - name: server
+    image: hashicorp/http-echo
+    imagePullPolicy: IfNotPresent
+    args:
+    - -text="xpto"
+    - -listen=:8080
+    ports:
+    - name: dns
+      port: 8080
+      containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: server-service
+spec:
+  selector:
+    deployment: apicast-api-server
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080

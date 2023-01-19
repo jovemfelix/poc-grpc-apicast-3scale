@@ -1,0 +1,57 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  labels:
+    app: grpc-guide
+  name: grpcurl-config
+data:
+# reference from: source/grpc-helloworld/src/main/proto/helloworld.proto
+  helloworld.proto: |-
+    syntax = "proto3";
+
+    option java_multiple_files = true;
+    option java_package = "com.redhat.example";
+    option java_outer_classname = "HelloWorldProto";
+
+    package helloworld;
+
+    // The greeting service definition.
+    service Greeter {
+        // Sends a greeting
+        rpc SayHello (HelloRequest) returns (HelloReply) {}
+    }
+
+    // The request message containing the user's name.
+    message HelloRequest {
+        string name = 1;
+    }
+
+    // The response message containing the greetings
+    message HelloReply {
+        string message = 1;
+    }
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: grpc-guide
+  name: client
+spec:
+  terminationGracePeriodSeconds: 0
+  containers:
+  - name: grpcurl
+    image: quay.io/rfelix/grpcurl:latest
+    imagePullPolicy: IfNotPresent
+    stdin: true
+    tty: true
+    volumeMounts:
+      - name: config-volume
+        mountPath: /config
+        readOnly: true
+  volumes:
+    - name: config-volume
+      configMap:
+        name: grpcurl-config
