@@ -16,14 +16,16 @@ Certificates:
 The certificates are embedded into the yaml files, but if you want to change the
 values this is how are generated.
 
-Root CA certificate:
+**Root CA** certificate:
 
 ```shell
 openssl genrsa -out rootCA.key 2048
-openssl req -batch -new -x509 -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.pem
+export DOMAIN=apicast-service
+
+openssl req -batch -new -x509 -nodes -key rootCA.key -sha256 -days 3650 -subj "/C=US/ST=North Carolina/L=Raleigh/O=Red Hat/CN=${DOMAIN}" -out rootCA.pem
 ```
 
-Domain certificates for APICast
+Domain certificates for **APICast**
 
 ```shell
 export DOMAIN=apicast-service
@@ -35,7 +37,7 @@ openssl req -subj "/CN=${DOMAIN}"  -newkey rsa:4096 -nodes \
 openssl x509 -req -in ${DOMAIN}.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -out ${DOMAIN}.crt -days 3650 -sha256
 ```
 
-Domain certificates for GRPC endpoint:
+Domain certificates for **GRPC** endpoint:
 
 ```shell
 export DOMAIN=grpc-service
